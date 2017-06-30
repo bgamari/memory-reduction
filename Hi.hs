@@ -13,12 +13,12 @@ import System.Environment
 -- Reading ploc using Attoparsec : fast but not helpful error messages.
 -- For debug, use parseTest and ghci for each component.
 --
--- The file format is 
+-- The file format is
 -- TIME
 -- HEADER
 -- [PARTICLE]
 --
--- with 
+-- with
 --
 -- TIME = realtime = FLOAT [gamt = FLOAT]
 -- HEADER = PART # XX YY ANGZ | ZZ  ALPHA BETA GAMMA ADX ADY ADZ
@@ -49,32 +49,32 @@ printPart (Particle i p adX adY adZ) =  T.intercalate "," l
 printIter :: Iteration -> T.Text
 printIter (Iteration t p) = T.intercalate "\n" $ map format p
       where format x = T.concat [toText t, ",", printPart x]
-     
+
 signedInt :: Parser Integer
 signedInt = signed decimal
 
 mySep1 = some $ char ' '
- 
-mySep = many space 
+
+mySep = many space
 
 gamt = mySep >> asciiCI "gamt =" >> mySep >> scientific
 
 -- time :: Parser Scientific
 time = do
-  mySep >> asciiCI "REALTIME =" >> mySep 
-  t <- scientific 
+  mySep >> asciiCI "REALTIME =" >> mySep
+  t <- scientific
   t' <- option 0 gamt
   return t
 
 -- Helper
 stringify x = mySep >> asciiCI x
- 
+
 -- Two headers are possible : the 5th column can be "zz" or "ANGZ"
-header = do 
-  mapM_ stringify header0 
+header = do
+  mapM_ stringify header0
   mySep *> (asciiCI "zz" <|> asciiCI "ANGZ")
-  mapM_ stringify header1 
-  where 
+  mapM_ stringify header1
+  where
     header0 = [ "PART", "#" , "XX", "YY"]
     header1 = [ "ALPHA", "BETA", "GAMMA" , "ADX", "ADY", "ADZ"]
 
@@ -88,8 +88,8 @@ part = do
                  <*> double <* mySep1
                  <*> double <* mySep1
                  <*> double <* mySep1
-  asd <- sepBy signedInt mySep1 
-  Particle id coord 
+  asd <- sepBy signedInt mySep1
+  Particle id coord
     <$> signedInt <* mySep1
     <*> signedInt <* mySep1
     <*> signedInt <* mySep1
@@ -98,23 +98,23 @@ emptyLine = mySep >> endOfLine
 
  -- Read an iteration
 iter :: Parser Iteration
-iter = do 
+iter = do
   t <- time <* endOfLine
   header  >> endOfLine
   allPart <- sepBy part endOfLine
   return $ Iteration t allPart
- 
-parseExpr = space >> sepBy iter space 
- 
+
+parseExpr = space >> sepBy iter space
+
 readExpr input = case eitherResult . parse parseExpr $ input of
   Left err -> error "failed to read"
   Right val -> val
--- 
+--
 data ParserArgs = ParserArgs { input :: String
-                             , output :: FilePath } 
+                             , output :: FilePath }
                    deriving (Show, Data, Typeable)
 
-parserArgs = ParserArgs { 
+parserArgs = ParserArgs {
                 input = def &= argPos 0 &= typ "INPUT"
                 , output = def &= argPos 1 &= typ "OUTPUT"
                 }
