@@ -25,8 +25,8 @@ import System.Environment
 -- PARTICLE = INT FLOAT*9
 data Particle = Particle {
   id :: Integer,
-  ad :: [Integer]
   pos :: !Coord,
+  adX, adY, adZ :: !Integer
 }
 
 data Coord = Coord { xx, yy, zz, alpha, beta, gamma :: !Scientific }
@@ -42,8 +42,8 @@ toText = T.pack . show
 addComma x = T.intercalate "," $ map toText x
 
 printPart :: Particle -> T.Text
-printPart (Particle i p a) =  T.intercalate "," l
-    where l = [toText i, addComma $ coordToList p, addComma a]
+printPart (Particle i p adX adY adZ) =  T.intercalate "," l
+    where l = [toText i, addComma $ coordToList p, addComma [adX, adY, adZ]]
           coordToList (Coord {..}) = [xx, yy, zz, alpha, beta, gamma]
 
 printIter :: Iteration -> T.Text
@@ -88,8 +88,11 @@ part = do
                  <*> scientific <* mySep1
                  <*> scientific <* mySep1
                  <*> scientific <* mySep1
-  asd <-  sepBy signedInt mySep1 
-  return $ Particle id coord asd
+  asd <- sepBy signedInt mySep1 
+  Particle id coord 
+    <$> signedInt <* mySep1
+    <*> signedInt <* mySep1
+    <*> signedInt <* mySep1
 
 emptyLine = mySep >> endOfLine
 
