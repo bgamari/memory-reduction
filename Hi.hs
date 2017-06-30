@@ -29,7 +29,7 @@ data Particle = Particle {
   adX, adY, adZ :: !Integer
 }
 
-data Coord = Coord { xx, yy, zz, alpha, beta, gamma :: !Scientific }
+data Coord = Coord { xx, yy, zz, alpha, beta, gamma :: !Double }
 
 data Iteration = Iteration {
   realtime :: Scientific,
@@ -82,12 +82,12 @@ header = do
 part :: Parser Particle
 part = do
   id <- mySep >> decimal <* mySep1
-  coord <- Coord <$> scientific <* mySep1
-                 <*> scientific <* mySep1
-                 <*> scientific <* mySep1
-                 <*> scientific <* mySep1
-                 <*> scientific <* mySep1
-                 <*> scientific <* mySep1
+  coord <- Coord <$> double <* mySep1
+                 <*> double <* mySep1
+                 <*> double <* mySep1
+                 <*> double <* mySep1
+                 <*> double <* mySep1
+                 <*> double <* mySep1
   asd <- sepBy signedInt mySep1 
   Particle id coord 
     <$> signedInt <* mySep1
