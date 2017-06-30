@@ -1,4 +1,8 @@
 {-# LANGUAGE DeriveDataTypeable, OverloadedStrings, RecordWildCards #-}
+{-# LANGUAGE MultiParamTypeClasses, TypeFamilies, TemplateHaskell #-}
+
+import qualified Data.Vector.Unboxed as VU
+import Data.Vector.Unboxed.Deriving
 import Control.Applicative
 import Control.Monad (void)
 import Data.List
@@ -31,9 +35,20 @@ data Particle = Particle {
 
 data Coord = Coord { xx, yy, zz, alpha, beta, gamma :: !Double }
 
+derivingUnbox "Coord"
+              [t| Coord -> (Double, Double, Double, Double, Double, Double) |]
+              [| \Coord{..} -> (xx, yy, zz, alpha, beta, gamma) |]
+              [| \(xx, yy, zz, alpha, beta, gamma) -> Coord{..} |]
+
+
+derivingUnbox "Particle"
+              [t| Particle -> (Int, Coord, Int, Int, Int) |]
+              [| \Particle{..} -> (id, pos, adX, adY, adZ) |]
+              [| \(id, pos, adX, adY, adZ) -> Particle{..} |]
+
 data Iteration = Iteration {
   realtime :: Scientific,
-  particles :: [Particle]
+  particles :: VU.Vector Particle
 }
 
 toText :: Show a => a -> T.Text
@@ -47,7 +62,7 @@ printPart (Particle i p adX adY adZ) =  T.intercalate "," l
           coordToList (Coord {..}) = [xx, yy, zz, alpha, beta, gamma]
 
 printIter :: Iteration -> T.Text
-printIter (Iteration t p) = T.intercalate "\n" $ map format p
+printIter (Iteration t p) = T.intercalate "\n" $ map format (VU.toList p)
       where format x = T.concat [toText t, ",", printPart x]
 
 signedInt :: Parser Int
@@ -102,7 +117,7 @@ iter = do
   t <- time <* endOfLine
   header  >> endOfLine
   allPart <- sepBy part endOfLine
-  return $ Iteration t allPart
+  return $ Iteration t (VU.fromList allPart)
 
 parseExpr = space >> sepBy iter space
 
