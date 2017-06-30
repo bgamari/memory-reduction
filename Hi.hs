@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, RecordWildCards #-}
 import Control.Applicative
 import Control.Monad (void)
 import Data.List
@@ -25,9 +25,11 @@ import System.Environment
 -- PARTICLE = INT FLOAT*9
 data Particle = Particle {
   id :: Integer,
-  pos :: [Scientific],
   ad :: [Integer]
+  pos :: !Coord,
 }
+
+data Coord = Coord { xx, yy, zz, alpha, beta, gamma :: !Scientific }
 
 data Iteration = Iteration {
   realtime :: Scientific,
@@ -41,7 +43,8 @@ addComma x = T.intercalate "," $ map toText x
 
 printPart :: Particle -> T.Text
 printPart (Particle i p a) =  T.intercalate "," l
-    where l = [toText i, addComma p, addComma a]
+    where l = [toText i, addComma $ coordToList p, addComma a]
+          coordToList (Coord {..}) = [xx, yy, zz, alpha, beta, gamma]
 
 printIter :: Iteration -> T.Text
 printIter (Iteration t p) = T.intercalate "\n" $ map format p
@@ -79,7 +82,12 @@ header = do
 part :: Parser Particle
 part = do
   id <- mySep >> decimal <* mySep1
-  coord <- count 6 (scientific <* mySep1)
+  coord <- Coord <$> scientific <* mySep1
+                 <*> scientific <* mySep1
+                 <*> scientific <* mySep1
+                 <*> scientific <* mySep1
+                 <*> scientific <* mySep1
+                 <*> scientific <* mySep1
   asd <-  sepBy signedInt mySep1 
   return $ Particle id coord asd
 
