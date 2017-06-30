@@ -24,9 +24,9 @@ import System.Environment
 -- HEADER = PART # XX YY ANGZ | ZZ  ALPHA BETA GAMMA ADX ADY ADZ
 -- PARTICLE = INT FLOAT*9
 data Particle = Particle {
-  id :: Integer,
+  id :: !Int,
   pos :: !Coord,
-  adX, adY, adZ :: !Integer
+  adX, adY, adZ :: !Int
 }
 
 data Coord = Coord { xx, yy, zz, alpha, beta, gamma :: !Double }
@@ -50,7 +50,7 @@ printIter :: Iteration -> T.Text
 printIter (Iteration t p) = T.intercalate "\n" $ map format p
       where format x = T.concat [toText t, ",", printPart x]
 
-signedInt :: Parser Integer
+signedInt :: Parser Int
 signedInt = signed decimal
 
 mySep1 = some $ char ' '
